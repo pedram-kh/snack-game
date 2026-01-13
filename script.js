@@ -33,6 +33,17 @@ let touchEndY = 0;
 // Audio Context for sound effects
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
+// Resume audio context on first user interaction (required by browsers)
+function resumeAudioContext() {
+    if (audioContext.state === 'suspended') {
+        audioContext.resume();
+    }
+}
+
+document.addEventListener('click', resumeAudioContext, { once: true });
+document.addEventListener('keydown', resumeAudioContext, { once: true });
+document.addEventListener('touchstart', resumeAudioContext, { once: true });
+
 // Sound effect functions
 function playEatSound() {
     if (!soundEnabled) return;
@@ -358,9 +369,9 @@ function gameOver() {
     gameOverElement.classList.add('show');
     playGameOverSound();
     
-    // Show swipe guide again when game is over
-    if (swipeGuide && window.innerWidth <= 850) {
-        swipeGuide.style.display = 'block';
+    // Hide swipe guide when game is over
+    if (swipeGuide) {
+        swipeGuide.style.display = 'none';
     }
 }
 
@@ -373,6 +384,12 @@ function resetGame() {
     scoreElement.textContent = score;
     gameOverElement.classList.remove('show');
     startScreenElement.classList.add('hide');
+    
+    // Hide swipe guide at start screen
+    if (swipeGuide) {
+        swipeGuide.style.display = 'none';
+    }
+    
     generateFood();
     gameRunning = true;
     hasStarted = false;
@@ -396,10 +413,13 @@ function startGame(selectedDifficulty) {
     difficultyDisplay.textContent = difficulty.toUpperCase();
     resetGame();
     
-    // Hide swipe guide when game starts
-    if (swipeGuide) {
-        swipeGuide.style.display = 'none';
+    // Show swipe guide during gameplay on mobile only
+    if (swipeGuide && window.innerWidth <= 850) {
+        swipeGuide.style.display = 'block';
     }
+    
+    // Resume audio context when game starts
+    resumeAudioContext();
     
     // Clear existing interval and start new one with correct speed
     if (gameInterval) {
@@ -557,4 +577,10 @@ document.body.addEventListener('touchmove', (e) => {
 generateFood();
 gameRunning = false;
 hasStarted = false;
+
+// Hide swipe guide initially
+if (swipeGuide) {
+    swipeGuide.style.display = 'none';
+}
+
 gameInterval = setInterval(gameLoop, 150);

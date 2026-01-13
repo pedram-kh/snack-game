@@ -195,20 +195,21 @@ body {
 }
 
 .game-over-text-mobile {
-    display: none;
+    display: none !important;
 }
 
 .game-over-text-desktop {
-    display: block;
+    display: block !important;
+    margin: 0;
 }
 
 .swipe-guide {
     display: none;
-    position: absolute;
+    position: fixed;
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(44, 62, 80, 0.9);
     padding: 10px 20px;
     border-radius: 10px;
     border: 2px solid rgba(255, 255, 255, 0.3);
@@ -337,15 +338,11 @@ body {
     }
     
     .game-over-text-desktop {
-        display: none;
+        display: none !important;
     }
     
     .game-over-text-mobile {
-        display: block;
-    }
-    
-    .swipe-guide {
-        display: block;
+        display: block !important;
     }
     
     .difficulty-buttons {

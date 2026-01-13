@@ -48,20 +48,29 @@ document.addEventListener('touchstart', resumeAudioContext, { once: true });
 function playEatSound() {
     if (!soundEnabled) return;
     
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(800, audioContext.currentTime + 0.1);
-    
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-    
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.1);
+    try {
+        // Ensure audio context is running
+        if (audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
+        
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(800, audioContext.currentTime + 0.1);
+        
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.1);
+    } catch (error) {
+        console.log('Audio error:', error);
+    }
 }
 
 function playGameOverSound() {
@@ -384,12 +393,6 @@ function resetGame() {
     scoreElement.textContent = score;
     gameOverElement.classList.remove('show');
     startScreenElement.classList.add('hide');
-    
-    // Hide swipe guide at start screen
-    if (swipeGuide) {
-        swipeGuide.style.display = 'none';
-    }
-    
     generateFood();
     gameRunning = true;
     hasStarted = false;
@@ -408,18 +411,22 @@ function getGameSpeed() {
 }
 
 // Start game with selected difficulty
-function startGame(selectedDifficulty) {
+async function startGame(selectedDifficulty) {
     difficulty = selectedDifficulty;
     difficultyDisplay.textContent = difficulty.toUpperCase();
+    
+    // Ensure audio is ready before starting game
+    if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+    }
+    
     resetGame();
     
     // Show swipe guide during gameplay on mobile only
     if (swipeGuide && window.innerWidth <= 850) {
         swipeGuide.style.display = 'block';
+        console.log('Swipe guide should be visible now');
     }
-    
-    // Resume audio context when game starts
-    resumeAudioContext();
     
     // Clear existing interval and start new one with correct speed
     if (gameInterval) {
@@ -447,7 +454,11 @@ function gameLoop() {
 
 // Difficulty button listeners
 difficultyButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
+        // Ensure audio context is resumed on mobile
+        if (audioContext.state === 'suspended') {
+            await audioContext.resume();
+        }
         const selectedDifficulty = btn.getAttribute('data-difficulty');
         startGame(selectedDifficulty);
     });

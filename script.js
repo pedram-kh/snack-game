@@ -8,9 +8,26 @@ const soundBtn = document.getElementById('soundBtn');
 const difficultyDisplay = document.getElementById('difficultyDisplay');
 const difficultyButtons = document.querySelectorAll('.difficulty-btn');
 
-// Set canvas size
+// Set canvas size (will be responsive via CSS)
+function resizeCanvas() {
+    const container = document.querySelector('.game-container');
+    const size = Math.min(window.innerWidth - 20, 800);
+    canvas.style.width = size + 'px';
+    canvas.style.height = size + 'px';
+}
+
 canvas.width = 800;
 canvas.height = 800;
+resizeCanvas();
+
+// Resize canvas on window resize
+window.addEventListener('resize', resizeCanvas);
+
+// Touch/Swipe variables
+let touchStartX = 0;
+let touchStartY = 0;
+let touchEndX = 0;
+let touchEndY = 0;
 
 // Game settings
 const gridSize = 20;
@@ -380,6 +397,66 @@ soundBtn.addEventListener('click', () => {
     soundEnabled = !soundEnabled;
     soundBtn.textContent = soundEnabled ? '🔊' : '🔇';
 });
+
+// Touch/Swipe Controls for Mobile
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    touchStartX = e.changedTouches[0].screenX;
+    touchStartY = e.changedTouches[0].screenY;
+}, { passive: false });
+
+canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    if (!gameRunning) return;
+    
+    touchEndX = e.changedTouches[0].screenX;
+    touchEndY = e.changedTouches[0].screenY;
+    handleSwipe();
+}, { passive: false });
+
+function handleSwipe() {
+    const deltaX = touchEndX - touchStartX;
+    const deltaY = touchEndY - touchStartY;
+    const minSwipeDistance = 30; // Minimum distance for a swipe
+    
+    // Determine if swipe is more horizontal or vertical
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        // Horizontal swipe
+        if (Math.abs(deltaX) > minSwipeDistance) {
+            if (deltaX > 0 && dx !== -1) {
+                // Swipe right
+                dx = 1;
+                dy = 0;
+                hasStarted = true;
+            } else if (deltaX < 0 && dx !== 1) {
+                // Swipe left
+                dx = -1;
+                dy = 0;
+                hasStarted = true;
+            }
+        }
+    } else {
+        // Vertical swipe
+        if (Math.abs(deltaY) > minSwipeDistance) {
+            if (deltaY > 0 && dy !== -1) {
+                // Swipe down
+                dx = 0;
+                dy = 1;
+                hasStarted = true;
+            } else if (deltaY < 0 && dy !== 1) {
+                // Swipe up
+                dx = 0;
+                dy = -1;
+                hasStarted = true;
+            }
+        }
+    }
+}
+
+// Prevent scrolling on touch devices
+document.body.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+}, { passive: false });
 
 // Initialize game (don't start until difficulty is selected)
 generateFood();

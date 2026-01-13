@@ -30,6 +30,66 @@ let touchStartY = 0;
 let touchEndX = 0;
 let touchEndY = 0;
 
+// Audio Context for sound effects
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+// Sound effect functions
+function playEatSound() {
+    if (!soundEnabled) return;
+    
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(800, audioContext.currentTime + 0.1);
+    
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.1);
+}
+
+function playGameOverSound() {
+    if (!soundEnabled) return;
+    
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.5);
+    
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.5);
+}
+
+function playMoveSound() {
+    if (!soundEnabled) return;
+    
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+    
+    gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.05);
+}
+
 // Game settings
 const gridSize = 20;
 const tileCount = canvas.width / gridSize;
@@ -285,6 +345,7 @@ function moveSnake() {
             localStorage.setItem('snakeHighScore', highScore);
         }
         
+        playEatSound();
         generateFood();
     } else {
         snake.pop();
@@ -295,6 +356,7 @@ function moveSnake() {
 function gameOver() {
     gameRunning = false;
     gameOverElement.classList.add('show');
+    playGameOverSound();
     
     // Show swipe guide again when game is over
     if (swipeGuide && window.innerWidth <= 850) {
@@ -349,7 +411,13 @@ function startGame(selectedDifficulty) {
 // Game loop
 function gameLoop() {
     if (gameRunning) {
+        const prevLength = snake.length;
         moveSnake();
+        
+        // Play move sound only if snake actually moved and didn't grow
+        if (gameRunning && dx !== 0 && dy !== 0 && snake.length === prevLength) {
+            playMoveSound();
+        }
     }
     
     drawGrid();

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <div class="score-section">
+                <span class="icon apple-icon">🍎</span>
+                <span class="score-label">Score: <span id="score">0</span></span>
+            </div>
+            <div class="high-score-section">
+                <span class="icon trophy-icon">🏆</span>
+                <span class="high-score-label">High: <span id="highScore">0</span></span>
+            </div>
+            <div class="difficulty-display">
+                <span id="difficultyDisplay">Normal</span>
+            </div>
+            <div class="sound-section">
+                <button class="sound-btn" id="soundBtn">🔊</button>
+            </div>
+        </div>
+        <canvas id="gameCanvas"></canvas>
+        <div class="start-screen" id="startScreen">
+            <h2>SNAKE</h2>
+            <p>Select Difficulty</p>
+            <div class="difficulty-buttons">
+                <button class="difficulty-btn" data-difficulty="easy">EASY</button>
+                <button class="difficulty-btn" data-difficulty="normal">NORMAL</button>
+                <button class="difficulty-btn" data-difficulty="hard">HARD</button>
+            </div>
+        </div>
+        <div class="game-over" id="gameOver">
+            <h2>GAME OVER</h2>
+            <p>Press SPACE to return to menu</p>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

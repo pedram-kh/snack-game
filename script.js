@@ -7,6 +7,7 @@ const startScreenElement = document.getElementById('startScreen');
 const soundBtn = document.getElementById('soundBtn');
 const difficultyDisplay = document.getElementById('difficultyDisplay');
 const difficultyButtons = document.querySelectorAll('.difficulty-btn');
+const swipeGuide = document.getElementById('swipeGuide');
 
 // Set canvas size (will be responsive via CSS)
 function resizeCanvas() {
@@ -294,6 +295,11 @@ function moveSnake() {
 function gameOver() {
     gameRunning = false;
     gameOverElement.classList.add('show');
+    
+    // Show swipe guide again when game is over
+    if (swipeGuide && window.innerWidth <= 850) {
+        swipeGuide.style.display = 'block';
+    }
 }
 
 // Reset game
@@ -327,6 +333,11 @@ function startGame(selectedDifficulty) {
     difficulty = selectedDifficulty;
     difficultyDisplay.textContent = difficulty.toUpperCase();
     resetGame();
+    
+    // Hide swipe guide when game starts
+    if (swipeGuide) {
+        swipeGuide.style.display = 'none';
+    }
     
     // Clear existing interval and start new one with correct speed
     if (gameInterval) {
@@ -407,12 +418,28 @@ canvas.addEventListener('touchstart', (e) => {
 
 canvas.addEventListener('touchend', (e) => {
     e.preventDefault();
+    
+    // If game over is showing, tap to return to menu
+    if (!gameRunning && gameOverElement.classList.contains('show')) {
+        startScreenElement.classList.remove('hide');
+        gameOverElement.classList.remove('show');
+        return;
+    }
+    
     if (!gameRunning) return;
     
     touchEndX = e.changedTouches[0].screenX;
     touchEndY = e.changedTouches[0].screenY;
     handleSwipe();
 }, { passive: false });
+
+// Also add click handler for game over screen on mobile
+gameOverElement.addEventListener('click', () => {
+    if (!gameRunning && gameOverElement.classList.contains('show')) {
+        startScreenElement.classList.remove('hide');
+        gameOverElement.classList.remove('show');
+    }
+});
 
 function handleSwipe() {
     const deltaX = touchEndX - touchStartX;

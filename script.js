@@ -31,29 +31,29 @@ let touchEndX = 0;
 let touchEndY = 0;
 
 // Audio Context for sound effects
-const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+let audioContext;
+let audioInitialized = false;
 
-// Resume audio context on first user interaction (required by browsers)
-function resumeAudioContext() {
+// Initialize audio context
+function initAudio() {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
     if (audioContext.state === 'suspended') {
-        audioContext.resume();
+        audioContext.resume().then(() => {
+            audioInitialized = true;
+            console.log('Audio initialized successfully');
+        });
+    } else {
+        audioInitialized = true;
     }
 }
 
-document.addEventListener('click', resumeAudioContext, { once: true });
-document.addEventListener('keydown', resumeAudioContext, { once: true });
-document.addEventListener('touchstart', resumeAudioContext, { once: true });
-
 // Sound effect functions
 function playEatSound() {
-    if (!soundEnabled) return;
+    if (!soundEnabled || !audioContext) return;
     
     try {
-        // Ensure audio context is running
-        if (audioContext.state === 'suspended') {
-            audioContext.resume();
-        }
-        
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
         
@@ -74,40 +74,48 @@ function playEatSound() {
 }
 
 function playGameOverSound() {
-    if (!soundEnabled) return;
+    if (!soundEnabled || !audioContext) return;
     
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.5);
-    
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-    
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.5);
+    try {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.5);
+        
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.5);
+    } catch (error) {
+        console.log('Audio error:', error);
+    }
 }
 
 function playMoveSound() {
-    if (!soundEnabled) return;
+    if (!soundEnabled || !audioContext) return;
     
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
-    
-    gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
-    
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.05);
+    try {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+        
+        gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.05);
+    } catch (error) {
+        console.log('Audio error:', error);
+    }
 }
 
 // Game settings
@@ -411,14 +419,9 @@ function getGameSpeed() {
 }
 
 // Start game with selected difficulty
-async function startGame(selectedDifficulty) {
+function startGame(selectedDifficulty) {
     difficulty = selectedDifficulty;
     difficultyDisplay.textContent = difficulty.toUpperCase();
-    
-    // Ensure audio is ready before starting game
-    if (audioContext.state === 'suspended') {
-        await audioContext.resume();
-    }
     
     resetGame();
     
@@ -454,13 +457,13 @@ function gameLoop() {
 
 // Difficulty button listeners
 difficultyButtons.forEach(btn => {
-    btn.addEventListener('click', async () => {
-        // Ensure audio context is resumed on mobile
-        if (audioContext.state === 'suspended') {
-            await audioContext.resume();
-        }
+    btn.addEventListener('click', () => {
+        // Initialize audio on user interaction
+        initAudio();
         const selectedDifficulty = btn.getAttribute('data-difficulty');
-        startGame(selectedDifficulty);
+        setTimeout(() => {
+            startGame(selectedDifficulty);
+        }, 100);
     });
 });
 
@@ -504,6 +507,10 @@ document.addEventListener('keydown', (e) => {
 
 // Sound toggle
 soundBtn.addEventListener('click', () => {
+    // Initialize audio if not already done
+    if (!audioContext) {
+        initAudio();
+    }
     soundEnabled = !soundEnabled;
     soundBtn.textContent = soundEnabled ? '🔊' : '🔇';
 });
